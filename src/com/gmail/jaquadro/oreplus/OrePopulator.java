@@ -141,7 +141,7 @@ public class OrePopulator extends BlockPopulator {
                             for (int iz = zStart; iz <= zEnd; iz++) {
                                 double zThresh = (iz + 0.5D - zPos) / (fuzzXZ / 2.0D);
                                 if (xThresh * xThresh + yThresh * yThresh + zThresh * zThresh < 1.0D) {
-                                    Block block = world.getBlockAt(x, y, z);
+                                    Block block = world.getBlockAt(ix, iy, iz);
                                     if (block.getType() == Material.STONE) {
                                         block.setTypeId(material.getBlockId());
                                         if (material.isDataValid())
