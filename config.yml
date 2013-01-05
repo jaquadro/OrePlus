@@ -1,0 +1,32 @@
+default:
+    generate:
+        - block: IRON_ORE
+          enabled: true
+          size: 8
+          rounds: 3
+          min-height: 0
+          max-height: 64
+        - block: GOLD_ORE
+          enabled: true
+          size: 8
+          rounds: 2
+          min-height: 0
+          max-height: 32
+        - block: DIAMOND_ORE
+          enabled: true
+          size: 7
+          rounds: 1
+          min-height: 0
+          max-height: 16
+        - block: EMERALD_ORE
+          enabled: true
+          size: 7
+          rounds: 2
+          min-height: 0
+          max-height: 16
+          biomes: [EXTREME_HILLS, JUNGLE_HILLS]
+    clear:
+        - block: EMERALD_ORE
+          enabled: true
+          min-height: 0
+          max-height: 32
