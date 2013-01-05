@@ -21,12 +21,13 @@ default:
         - block: EMERALD_ORE
           enabled: true
           size: 7
-          rounds: 2
+          rounds: 1
           min-height: 0
           max-height: 16
+          probability: 0.25
           biomes: [EXTREME_HILLS, JUNGLE_HILLS]
     clear:
         - block: EMERALD_ORE
-          enabled: true
+          enabled: false
           min-height: 0
           max-height: 32
