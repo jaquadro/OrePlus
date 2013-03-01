@@ -7,15 +7,37 @@ import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.generator.BlockPopulator;
 
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class OrePopulator extends BlockPopulator {
     private OrePlus _plugin;
 
+    private static int _stackDepth = 0;
+
+    private class DeferredGenerateTask {
+        private World _world;
+        private Random _random;
+        private int _cx;
+        private int _cz;
+
+        public DeferredGenerateTask (World world, Random random, int cx, int cz) {
+            _world = world;
+            _random = random;
+            _cx = cx;
+            _cz = cz;
+        }
+
+        public void execute() {
+            applyGenerateRules(_world, _random, _world.getChunkAt(_cx,  _cz));
+        }
+    }
+
+    private Queue<DeferredGenerateTask> _deferredGenerateTasks;
+
     public OrePopulator (OrePlus plugin)
     {
         _plugin = plugin;
+        _deferredGenerateTasks = new LinkedList<DeferredGenerateTask>();
     }
 
     @Override
@@ -23,10 +45,25 @@ public class OrePopulator extends BlockPopulator {
     {
         applyClearRules(world, chunk);
         applyGenerateRules(world, random, chunk);
+
+        if (_stackDepth == 0) {
+            while (_deferredGenerateTasks.size() > 0) {
+                DeferredGenerateTask task = _deferredGenerateTasks.remove();
+                task.execute();
+            }
+        }
     }
 
     private void applyGenerateRules (World world, Random random, Chunk chunk)
     {
+        if (_stackDepth > 0) {
+            _deferredGenerateTasks.add(new DeferredGenerateTask(world, random, chunk.getX(), chunk.getZ()));
+            return;
+        }
+
+        _stackDepth++;
+        //_plugin.getLogger().info("Generate chunk " + chunk.getX() + "," + chunk.getZ() + "; depth: " + _stackDepth);
+
         List<OreRule> rules = _plugin.GetOreRules(world);
         if (rules == null)
             return;
@@ -56,10 +93,15 @@ public class OrePopulator extends BlockPopulator {
                 generate(world, random, x, y, z, rule.getSize(), material);
             }
         }
+
+        _stackDepth--;
     }
 
     private void applyClearRules (World world, Chunk chunk)
     {
+        _stackDepth++;
+        //_plugin.getLogger().info("Clear chunk " + chunk.getX() + "," + chunk.getZ() + "; depth: " + _stackDepth);
+
         List<ClearRule> rules = _plugin.GetClearRules(world);
         if (rules == null)
             return;
@@ -101,6 +143,8 @@ public class OrePopulator extends BlockPopulator {
                 }
             }
         }
+
+        _stackDepth--;
     }
 
     private void generate (World world, Random rand, int x, int y, int z, int size, OPMaterial material)
@@ -141,8 +185,8 @@ public class OrePopulator extends BlockPopulator {
                             for (int iz = zStart; iz <= zEnd; iz++) {
                                 double zThresh = (iz + 0.5D - zPos) / (fuzzXZ / 2.0D);
                                 if (xThresh * xThresh + yThresh * yThresh + zThresh * zThresh < 1.0D) {
-                                    Block block = world.getBlockAt(ix, iy, iz);
-                                    if (block.getType() == Material.STONE) {
+                                    Block block = tryGetBlock(world, ix, iy, iz);
+                                    if (block != null && block.getType() == Material.STONE) {
                                         block.setTypeId(material.getBlockId());
                                         if (material.isDataValid())
                                             block.setData((byte)material.getBlockData());
@@ -154,5 +198,22 @@ public class OrePopulator extends BlockPopulator {
                 }
             }
         }
+    }
+
+    private Block tryGetBlock (World world, int x, int y, int z)
+    {
+        int cx = x >> 4;
+        int cz = z >> 4;
+
+        if (!world.isChunkLoaded(cx, cz)) {
+            if (!world.loadChunk(cx, cz, false))
+                return null;
+        }
+
+        Chunk chunk = world.getChunkAt(cx, cz);
+        if (chunk == null)
+            return null;
+
+        return chunk.getBlock(x & 15, y, z & 15);
     }
 }
