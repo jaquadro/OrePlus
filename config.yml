@@ -1,4 +1,5 @@
 default:
+    verbose-startup: false
     generate:
         - block: IRON_ORE
           enabled: true

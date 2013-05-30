@@ -27,8 +27,7 @@ public class OrePlus extends JavaPlugin
         _worldGenRules = new HashMap<World, List<OreRule>>();
         _worldClearRules = new HashMap<World, List<ClearRule>>();
 
-        _config.options().copyDefaults(true);
-        saveConfig();
+        saveDefaultConfig();
     }
 
     @Override
@@ -51,6 +50,11 @@ public class OrePlus extends JavaPlugin
         if (_config.contains("default")) {
             _defaultGenRules = OreRule.LoadFromWorldConfig(_config.getConfigurationSection("default"));
             getLogger().info("Loaded default rules: " + _defaultGenRules.size() + " generator rules found");
+
+            if (_config.contains("verbose-startup") && _config.getBoolean("verbose-startup")) {
+                for (OreRule rule : _defaultGenRules)
+                    getLogger().info("  Generate Type " + rule.getMaterial().getBlockId() + ":" + rule.getMaterial().getBlockData());
+            }
             return _defaultGenRules;
         }
 
@@ -72,6 +76,11 @@ public class OrePlus extends JavaPlugin
         if (_config.contains("default")) {
             _defaultClearRules = ClearRule.LoadFromWorldConfig(_config.getConfigurationSection("default"));
             getLogger().info("Loaded default rules: " + _defaultClearRules.size() + " clear rules found");
+
+            if (_config.contains("verbose-startup") && _config.getBoolean("verbose-startup")) {
+                for (OreRule rule : _defaultGenRules)
+                    getLogger().info("  Clear Type " + rule.getMaterial().getBlockId() + ":" + rule.getMaterial().getBlockData());
+            }
             return _defaultClearRules;
         }
 
